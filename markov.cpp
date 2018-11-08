@@ -47,17 +47,24 @@ void Markov::parse_stream(ifstream &text_stream) {
 
 void Markov::make_markov_probs(){
     int max = INT_MIN;
+
+    // outer loop iterator: key is the k sized string  | value is a dictionary with the key being the following character and the count
+    // being the number of entries with this key - value pair
+
     unordered_map<string, unordered_map<char, int> >::iterator iter = markov_counts.begin();
 
+
     while(iter != markov_counts.end()){
+        // inner loop iterator is the dictionary iterator of each k-sized string and the corresponding characters which follow it and the the number
         unordered_map<char, int> key_map = iter -> second;
         unordered_map<char, int>::const_iterator iter1;
         iter1 = key_map.begin();
         string temp = iter -> first;
+        int total_so_far = 0;
 
-        int each_total = 0;
+        // updates the max and adds to the total count for each string
         while(iter1 != key_map.end()){
-            each_total += iter1 -> second;
+            total_so_far += iter1 -> second;
 
             if(iter1 -> second > max){
                 max_string = temp;
@@ -65,9 +72,20 @@ void Markov::make_markov_probs(){
             }
             iter1++;
         }
+
+        // resets the iterator and creates a new dictionary to store the percentage of each character
+        iter1 = key_map.begin();
+        unordered_map<char, double> probs;
+
+        while(iter1 != key_map.end()){
+            // inserts into the new percentage dictionary the character and the corresponding percentage
+            probs.insert({iter1 -> first, (double) iter1->second / (double) total_so_far});
+            iter1++;
+        }
+        // inserts the newly created percentage dictionary into the main dictionary of probabilities of each string of k-characters
+        markov_probs.insert({iter -> first, probs});
         iter++;
     }
-
 }
 
 /**
